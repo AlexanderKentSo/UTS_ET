@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_app/permainan.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   runApp(const MyApp());
@@ -119,7 +121,30 @@ class _MyHomePageState extends State<MyHomePage> {
         onPressed: _incrementCounter,
         tooltip: 'Increment',
         child: const Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
+      ),
+      drawer: Drawer(
+          child: Column(
+        children: <Widget>[
+          UserAccountsDrawerHeader(
+              accountName: Text("xxx"),
+              accountEmail: Text("xxx"),
+              currentAccountPicture: CircleAvatar(
+                  backgroundImage: Image.network(
+                          'https://pbs.twimg.com/profile_images/1711031252722016257/pCB7nUk1_400x400.jpg')
+                      .image)),
+          ListTile(
+              title: Text("Permainan"),
+              leading: Icon(Icons.aod_rounded),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => permainan(),
+                  ),
+                );
+              })
+        ],
+      )), // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
 }
