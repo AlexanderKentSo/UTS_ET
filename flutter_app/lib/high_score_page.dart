@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
 
 class HighScorePage extends StatelessWidget {
+  final int highScore;
+  final int attempts;
+
+  HighScorePage({required this.highScore, required this.attempts});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -8,7 +13,13 @@ class HighScorePage extends StatelessWidget {
         title: Text('High Score Page'),
       ),
       body: Center(
-        child: Text('High Score Page Content'),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            Text('High Score: $highScore'),
+            Text('Attempts: $attempts'),
+          ],
+        ),
       ),
     );
   }

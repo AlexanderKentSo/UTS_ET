@@ -1,11 +1,18 @@
 import 'package:flutter/material.dart';
-import 'login_page.dart'; // Import file LoginPage
-import 'high_score_page.dart'; // Import file HighScorePage
+import 'package:shared_preferences/shared_preferences.dart';
+import 'login_page.dart';
+import 'high_score_page.dart';
 import 'permainan.dart';
 
-void main() {
+late SharedPreferences _prefs; // Declare _prefs globally
+
+void main() async { // Add async keyword here
+  WidgetsFlutterBinding.ensureInitialized();
+  _prefs = await SharedPreferences.getInstance();
   runApp(MyApp());
 }
+
+String? loggedInUsername;
 
 class MyApp extends StatelessWidget {
   @override
@@ -20,67 +27,120 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
+  @override
+  _HomePageState createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  late int highScore;
+  late int attempts;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadData();
+  }
+
+  _loadData() {
+    setState(() {
+      highScore = _prefs.getInt('highScore') ?? 0; // Load high score from SharedPreferences
+      attempts = _prefs.getInt('attempts') ?? 0; // Load attempts from SharedPreferences
+    });
+  } 
+
+  _saveData() {
+    _prefs.setInt('highScore', highScore); // Save high score to SharedPreferences
+    _prefs.setInt('attempts', attempts); // Save attempts to SharedPreferences
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor:
-          Color.fromARGB(255, 166, 213, 252), // Ubah warna background
-
       appBar: AppBar(
         title: Text(
-          'Home Page',
+          loggedInUsername != null ? 'Welcome, $loggedInUsername' : 'Home Page',
           style: TextStyle(
             fontFamily: 'Courier New',
             fontSize: 24,
             fontWeight: FontWeight.bold,
-            color: const Color.fromARGB(255, 8, 51, 127), // Ubah warna teks
+            color: const Color.fromARGB(255, 8, 51, 127),
           ),
         ),
-
         centerTitle: true,
-        backgroundColor: Color.fromARGB(255, 96, 184, 255), // Warna header
+        backgroundColor: Color.fromARGB(255, 96, 184, 255),
+        actions: <Widget>[
+          if (loggedInUsername != null)
+            IconButton(
+              icon: Icon(Icons.logout),
+              onPressed: () {
+                setState(() {
+                  loggedInUsername = null;
+                });
+              },
+            ),
+        ],
       ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            ElevatedButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => permainan()),
-                );
-              },
-              child: Text('Play'),
-            ),
-
-            SizedBox(height: 20), // Spacer
-
-            ElevatedButton(
-              onPressed: () {
-                // Navigasi ke halaman login
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => LoginPage()),
-                );
-              },
-              child: Text('Login'),
-            ),
-
-            SizedBox(height: 20), // Spacer
-
-            ElevatedButton(
-              onPressed: () {
-                // Navigasi ke halaman high score
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => HighScorePage()),
-                );
-              },
-              child: Text('High Score'),
-            ),
-          ],
+      body: Container(
+        decoration: BoxDecoration(
+          image: DecorationImage(
+            image: AssetImage('assets/background_image.png'), // Path to your image
+            fit: BoxFit.cover,
+          ),
+        ),
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              ElevatedButton(
+                onPressed: () async {
+                  final result = await Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => permainan()),
+                  );
+                  setState(() {
+                    attempts++; // Update attempts
+                    if (result > highScore) {
+                      highScore = result; // Update high score if the result is higher
+                      _saveData(); // Save data when the state changes
+                    }
+                  });
+                },
+                child: Text('Play'),
+              ),
+              SizedBox(height: 20),
+              if (loggedInUsername == null)
+                ElevatedButton(
+                  onPressed: () async {
+                    final result = await Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => LoginPage()),
+                    );
+                    if (result != null) {
+                      setState(() {
+                        loggedInUsername = result;
+                      });
+                    }
+                  },
+                  child: Text('Login'),
+                ),
+              SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => HighScorePage(
+                        highScore: highScore,
+                        attempts: attempts,
+                      ),
+                    ),
+                  );
+                },
+                child: Text('High Score'),
+              ),
+            ],
+          ),
         ),
       ),
     );
